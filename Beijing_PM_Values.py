@@ -17,13 +17,19 @@ def get_beijing_pm_values_from_us_emb(http_header, time_out):
         res = requests.get(url, headers = http_header, timeout=time_out)
         # parse xml content
         xmlroot = ET.fromstring(res.content)
-        # find the PM2.5 value
-        pm2_5 = xmlroot.find('channel/item/Conc').text
-        pm10 = 'N/A'
+        # find all PM2.5 values
+        items = xmlroot.findall('channel/item')
+        for i in items: 
+            pm2_5 = i.find('Conc').text
+            dtstr = i.find('ReadingDateTime').text
+            # return the first node whose PM2.5 is valid
+            if float(pm2_5) >= 0:
+                break
         # parse date and time in the data record
-        dt = dateutil.parser.parse(xmlroot.find('channel/item/ReadingDateTime').text)
+        dt = dateutil.parser.parse(dtstr)
         cur_date = dt.date()
         cur_time = dt.time()
+        pm10 = 'N/A'
         status = 0
     except:
         status = -1
